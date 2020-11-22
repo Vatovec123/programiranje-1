@@ -4,7 +4,23 @@
 Namig: Definirajte pomožno funkcijo za obračanje seznamov.
 [*----------------------------------------------------------------------------*)
 
-let rec reverse = ()
+let rec bad_reverse = function
+  | [] -> []
+  | x :: xs -> bad_reverse xs @ [x]
+
+(* Reverse xs - obrne koren seznama.*)
+(* Zdaj bi želeli na koncu dodati x.  xs :: x ne gre, ne obstaja.*)
+(* Uporabimo operator @, ki vzame seznam n seznam in da v seznam.*)
+(*Limanje seznamov slaba in počasna izbira*)
+
+let reverse list =
+  let rec reverse_aux acc list =
+    match list with
+    | [] -> acc
+    | x :: xs -> reverse_aux (x :: acc) xs
+  in
+  reverse_aux [] list
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [repeat x n] vrne seznam [n] ponovitev vrednosti [x]. Za neprimerne
@@ -16,7 +32,20 @@ let rec reverse = ()
  - : string list = []
 [*----------------------------------------------------------------------------*)
 
-let rec repeat = ()
+let rec repeat x n =
+  if n <= 0 then
+    []
+  else
+    x :: repeat x (n -1)
+
+ let rec repeat_tlrec x n =
+   let rec aux n acc =
+    if n <= 0 then 
+      acc
+    else
+      aux (n - 1) (x :: acc)
+  in
+  aux n []
 
 (*----------------------------------------------------------------------------*]
  Funkcija [range] sprejme število in vrne seznam vseh celih števil od 0 do
@@ -27,7 +56,9 @@ let rec repeat = ()
  - : int list = [0; 1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
 [*----------------------------------------------------------------------------*)
 
-let rec range = ()
+let rec range n =
+  let rec aux acc n =
+       
 
 (*----------------------------------------------------------------------------*]
  Funkcija [map f list] sprejme seznam [list] oblike [x0; x1; x2; ...] in
@@ -39,7 +70,9 @@ let rec range = ()
  - : int list = [2; 3; 4; 5; 6]
 [*----------------------------------------------------------------------------*)
 
-let rec map = ()
+let rec map f = function
+  | [] -> []
+  | x :: xs -> f x :: map f xs
 
 (*----------------------------------------------------------------------------*]
  Funkcija [map_tlrec] je repno rekurzivna različica funkcije [map].
