@@ -168,9 +168,9 @@ let reverse list =
 
 let intbool_reverse ib_list =
   let rec aux_reverse acc = function
-    | Nil -> Nill
+    | Nil -> Nil
     | IntCons (x, ib_list) -> aux_reverse (IntCons(x ,acc)) ib_list
-    | IntBool (x, ib_list) -> aux_reverse (IntBool(x, acc)) ib_list
+    | BoolCons (x, ib_list) -> aux_reverse (BoolCons(x, acc)) ib_list
   in
   aux_reverse Nil ib_list
 
@@ -183,13 +183,23 @@ let intbool_reverse ib_list =
 
 (* 5 :: true :: false :: 2 :: 1 :: true ~~~> (5 :: 2 :: 1)(true :: false :: true) *)
 
-(* 
+(* Tukaj bomo imeli sicer dva seznama. To bi lahko vse bil en akumolator, kjer bi bil akumolator 
+par dveh seznamov. Ampak, če imamo za akumulator par dveh seznamov ju bomo morali vedno
+ločiti, da bi dobili vsak seznam posebaj in spet združiti in dati nazaj v akumulator.
+Lažje je, če imamo par ali trojico, da uporabimo več akumulatorjev.
+Če pa je v akumulatorju seznam pa ne moremo imeti funkcije s poljubnimi elementi,
+amapak je potreben en akumolator.
+
  *)
+
 let rec intbool_separate ib_list =
   let rec separate  ints bools = function
-  | Nil ->
-  | IntCons (x, ib_list)
-  | BoolCons
+    | Nil -> (ints, bools) (*Damo inte in boole skupaj*)
+    | IntCons (x, ib_list) -> separate (x :: ints) bools ib_list (* Drugi akumolator se ne spremeni (bool) in se rekurzivno pokličemo*)
+    | BoolCons (x, ib_list) -> separate ints (x :: bools) ib_list (* Akumulator ints se ne spremeni*)
+  in
+  separate [] [] (intbool_reverse ib_list) (*Seprate ne damo na ib_list, ampak na to ;)*)
+
 
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
@@ -208,6 +218,13 @@ let rec intbool_separate ib_list =
  [specialisation], ki loči med temi zaposlitvami.
 [*----------------------------------------------------------------------------*)
 
+type magic =  Fire | Frost | Arcane
+
+type specialisation =  Historian | Teacher | Researcher
+
+type years = Years
+
+
 
 
 (*----------------------------------------------------------------------------*]
@@ -225,6 +242,14 @@ let rec intbool_separate ib_list =
  - : wizard = {name = "Matija"; status = Employed (Fire, Teacher)}
 [*----------------------------------------------------------------------------*)
 
+type status =
+  | Newbie
+  | Student of magic * years
+  | Employed of magic * specialisation
+
+(* let professor = {name = "Matija"; status = Employed (Fire, Teacher)}, professor ;;*)
+
+type wizard = {name : string; status: status}
 
 
 (*----------------------------------------------------------------------------*]
@@ -238,6 +263,15 @@ let rec intbool_separate ib_list =
  - : magic_counter = {fire = 1; frost = 1; arcane = 2}
 [*----------------------------------------------------------------------------*)
 
+type magic_counter = {fire : int; frost : int; arcane : int}
+(* S tem tipom točno vemo, katero polje je za katero magijo*)
+
+let update mc magic =
+  match magic with
+  | Arcane -> {arcane = mc.arcane + 1; fire = mc.fire; frost = mc.frost + 1}
+  | Fire -> {mc with fire = mc.fire + 1}
+  | Frost -> { mc with frost = mc. frost + 1}
+
 
 
 (*----------------------------------------------------------------------------*]
@@ -248,8 +282,56 @@ let rec intbool_separate ib_list =
  - : magic_counter = {fire = 3; frost = 0; arcane = 0}
 [*----------------------------------------------------------------------------*)
 
-let rec count_magic = ()
+let rec count_magic wizards =
+  match wizards with
+  | [] -> {arcane = 0; fire = 0; frost = 0}  (* Če prazen seznam nimamo uporabnikov*)
+  | w :: ws -> 
+    let count_others = count_magic ws in (* Najprej za vse ostale poskrbimo z rekurzijo. Najpre preštejemo magijo vseh ostalih. S tem dobimo nek counter in ga zdaj samo updatamo *)
+    let status = w.status in (* Dobimo njegov status*)
+    match status with
+      | Newbie -> count_others (* Če Newbie ni potrebno posodobit*)
+      | Student(magic,_ ) -> update count_others magic (* Posodobimo in uporabimo update*)
+      | Employed (magic,_ ) -> update count_others magic
 
+(* Krajša različica*)    
+let rec count_magic = function
+  | [] -> {arcane = 0; fire = 0; frost = 0}  
+  | w :: ws ->
+    match w.status with
+      | Newbie -> (count_magic ws)
+      | Student(magic,_ ) -> update (count_magic ws) magic
+      | Employed (magic,_ ) -> update (count_magic ws) magic 
+
+
+
+let rec count_magic wizards = 
+  let update_counter mc wizard = (* Ne sprejme magije, ampak counter in čarovnika*)
+    match wizard.status with
+    | Newbie -> mc
+    | Student(magic,_ ) -> update mc magic
+    | Employed (magic,_ ) -> update mc magic
+  in
+  List. fold_left update_counter {arcane=0; fire=0; frost=0} wizards
+
+
+(* Mi dobimo seznam čarovnikov, ampak tisto, kar nas zanima je seznam magij. Eni imajo magije drugi ne.*)
+)
+let rec count_magic wizards = (* Imamo seznam čarovnikov. Hočemo seznam magij; magic option, ker nimajo vsi magij*)
+  let get_magic wizard =      (* *)
+    match wizard.status with
+    | Newbie -> None  (* Nima magije*)
+    | Student(magic,_ ) -> Some magic 8 (*Neka magija*)
+    | Employed (magic,_ ) -> Some magic
+  in
+  let update_counter mc = function (* Direktno uporabimo na magijah*)
+    | Some magic -> update mc magic
+    | None -> mc (* Tega pustimo pri miru*)
+  in
+  wizards (* Imamo seznam čarovnikov, pretvorimo v seznam magij z list.map get_magic. Ta seznam magij prevotimo v counter*)
+  |> List.map get_magic 
+  |> List.fold_left update_counter {arcane=0; fire=0; frost=0}
+
+    
 (*----------------------------------------------------------------------------*]
  Želimo poiskati primernega kandidata za delovni razpis. Študent lahko postane
  zgodovinar po vsaj treh letih študija, raziskovalec po vsaj štirih letih
