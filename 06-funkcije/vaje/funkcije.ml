@@ -58,7 +58,10 @@ let rec repeat x n =
 
 let rec range n =
   let rec aux acc n =
-       
+    if n <= 0 then 
+      
+
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [map f list] sprejme seznam [list] oblike [x0; x1; x2; ...] in
