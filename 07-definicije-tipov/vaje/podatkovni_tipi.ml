@@ -315,12 +315,12 @@ let rec count_magic wizards =
 
 
 (* Mi dobimo seznam čarovnikov, ampak tisto, kar nas zanima je seznam magij. Eni imajo magije drugi ne.*)
-)
+
 let rec count_magic wizards = (* Imamo seznam čarovnikov. Hočemo seznam magij; magic option, ker nimajo vsi magij*)
   let get_magic wizard =      (* *)
     match wizard.status with
     | Newbie -> None  (* Nima magije*)
-    | Student(magic,_ ) -> Some magic 8 (*Neka magija*)
+    | Student(magic,_ ) -> Some magic  (*Neka magija*)
     | Employed (magic,_ ) -> Some magic
   in
   let update_counter mc = function (* Direktno uporabimo na magijah*)
